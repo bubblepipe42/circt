@@ -432,8 +432,7 @@ struct RvalueExprVisitor {
 
   Value getSelectIndex(Value index, const slang::ConstantRange &range) const {
     auto indexType = cast<moore::UnpackedType>(index.getType());
-    auto bw = std::max(llvm::Log2_32_Ceil(std::max(std::abs(range.lower()),
-                                                   std::abs(range.upper()))),
+    auto bw = std::max(llvm::Log2_32_Ceil(std::abs(range.upper())),
                        indexType.getBitSize().value());
     auto intType =
         moore::IntType::get(index.getContext(), bw, indexType.getDomain());
@@ -444,8 +443,8 @@ struct RvalueExprVisitor {
 
       Value newIndex =
           builder.createOrFold<moore::ConversionOp>(loc, intType, index);
-      Value offset = builder.create<moore::ConstantOp>(
-          loc, intType, range.lower(), /*isSigned = */ range.lower() < 0);
+      Value offset =
+          builder.create<moore::ConstantOp>(loc, intType, range.lower());
       return builder.createOrFold<moore::SubOp>(loc, newIndex, offset);
     }
 
@@ -454,8 +453,8 @@ struct RvalueExprVisitor {
 
     Value newIndex =
         builder.createOrFold<moore::ConversionOp>(loc, intType, index);
-    Value offset = builder.create<moore::ConstantOp>(
-        loc, intType, range.upper(), /* isSigned = */ range.upper() < 0);
+    Value offset =
+        builder.create<moore::ConstantOp>(loc, intType, range.upper());
     return builder.createOrFold<moore::SubOp>(loc, offset, newIndex);
   }
 
@@ -530,8 +529,8 @@ struct RvalueExprVisitor {
                                            subtrahendType.getDomain());
         auto sliceWidth =
             expr.right().constant->integer().as<uint32_t>().value() - 1;
-        auto minuend = builder.create<moore::ConstantOp>(
-            loc, intType, sliceWidth, expr.left().type->isSigned());
+        auto minuend =
+            builder.create<moore::ConstantOp>(loc, intType, sliceWidth);
         dynLowBit = builder.create<moore::SubOp>(loc, subtrahend, minuend);
       }
     } else {

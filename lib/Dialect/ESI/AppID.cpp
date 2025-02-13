@@ -30,10 +30,9 @@ public:
   /// bubbling up from an instance and is used to inform the conflicting entry
   /// error message.
   LogicalResult add(AppIDAttr id, Operation *op, bool inherited) {
-    auto existingIter = childAppIDPaths.find(id);
-    if (existingIter != childAppIDPaths.end()) {
+    if (childAppIDPaths.find(id) != childAppIDPaths.end()) {
       return op->emitOpError("Found multiple identical AppIDs in same module")
-                 .attachNote(existingIter->getSecond()->getLoc())
+                 .attachNote(childAppIDPaths[id]->getLoc())
              << "first AppID located here."
              << (inherited ? " Must insert appid to differentiate one instance "
                              "branch from the other."
@@ -223,11 +222,10 @@ FailureOr<ArrayAttr> AppIDIndex::getAppIDPathAttr(hw::HWModuleLike fromMod,
 FailureOr<const AppIDIndex::ModuleAppIDs *>
 AppIDIndex::buildIndexFor(hw::HWModuleLike mod) {
   // Memoize.
-  auto appidsIter = containerAppIDs.find(mod);
-  if (appidsIter != containerAppIDs.end())
-    return appidsIter->getSecond();
-  ModuleAppIDs *appIDs = new ModuleAppIDs();
-  containerAppIDs.try_emplace(mod, appIDs);
+  ModuleAppIDs *&appIDs = containerAppIDs[mod];
+  if (appIDs != nullptr)
+    return appIDs;
+  appIDs = new ModuleAppIDs();
 
   auto done = mod.walk([&](Operation *op) {
     // If an op has an appid attribute, add it to the index and terminate the
