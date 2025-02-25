@@ -68,6 +68,10 @@ void exportVerilog(MlirContext ctx, bool disableOptimization) {
 
   result = mlirPassManagerRunOnOp(pm, mlirModuleGetOperation(module));
   assert(mlirLogicalResultIsSuccess(result));
+
+  circtFirtoolOptionsDestroy(options);
+  mlirPassManagerDestroy(pm);
+  mlirModuleDestroy(module);
 }
 
 void testExportVerilog(MlirContext ctx) {
@@ -98,5 +102,6 @@ int main(void) {
   MlirContext ctx = mlirContextCreate();
   mlirDialectHandleLoadDialect(mlirGetDialectHandle__firrtl__(), ctx);
   testExportVerilog(ctx);
+  mlirContextDestroy(ctx);
   return 0;
 }

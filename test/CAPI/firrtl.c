@@ -56,7 +56,7 @@ void testExport(MlirContext ctx) {
   MlirLogicalResult result = mlirExportFIRRTL(module, dumpCallback, NULL);
   (void)result;
   assert(mlirLogicalResultIsSuccess(result));
-
+  mlirModuleDestroy(module);
   // CHECK: FIRRTL version 4.2.0
   // CHECK-NEXT: circuit ExportTestSimpleModule :
   // CHECK-NEXT:   module ExportTestSimpleModule : @[- 2:3]
@@ -91,6 +91,7 @@ void testValueFoldFlow(MlirContext ctx) {
   assert(firrtlValueFoldFlow(mlirBlockGetArgument(firModule, 1),
                              FIRRTL_VALUE_FLOW_SOURCE) ==
          FIRRTL_VALUE_FLOW_SINK);
+  mlirModuleDestroy(module);
 }
 
 void testImportAnnotations(MlirContext ctx) {
@@ -120,6 +121,7 @@ void testImportAnnotations(MlirContext ctx) {
       rawAnnotationsAttr);
 
   mlirOperationPrint(mlirModuleGetOperation(module), dumpCallback, NULL);
+  mlirModuleDestroy(module);
 
   // clang-format off
   // CHECK: firrtl.circuit "AnnoTest" attributes {rawAnnotations = [{class = "firrtl.transforms.DontTouchAnnotation", target = "~AnnoTest|AnnoTest>in"}]} {
@@ -367,11 +369,12 @@ void testTypeGetMaskType(MlirContext ctx) {
 int main(void) {
   MlirContext ctx = mlirContextCreate();
   mlirDialectHandleLoadDialect(mlirGetDialectHandle__firrtl__(), ctx);
-  testExport(ctx);
-  testValueFoldFlow(ctx);
-  testImportAnnotations(ctx);
+  testExport(ctx); // 1080 bytes, 12 loc
+  testValueFoldFlow(ctx); // 864 bytes, 10 loc
+  testImportAnnotations(ctx); // 672 bytes, 8 loc
   testAttrGetIntegerFromString(ctx);
   testTypeDiscriminantsAndQueries(ctx);
   testTypeGetMaskType(ctx);
+  mlirContextDestroy(ctx);
   return 0;
 }
