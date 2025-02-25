@@ -106,9 +106,10 @@ DEFINE_C_API_PTR_METHODS(OMEvaluator, circt::om::Evaluator)
 /// count.
 
 static inline OMEvaluatorValue wrap(EvaluatorValuePtr object) {
-  return OMEvaluatorValue{
-      static_cast<void *>((new EvaluatorValuePtr(std::move(object)))->get())};
+  auto wrappedPtr = std::make_shared<EvaluatorValuePtr>(std::move(object));
+  return OMEvaluatorValue{ static_cast<void*>(wrappedPtr.get()) };
 }
+
 
 static inline EvaluatorValuePtr unwrap(OMEvaluatorValue c) {
   return static_cast<evaluator::EvaluatorValue *>(c.ptr)->shared_from_this();
@@ -123,6 +124,8 @@ OMEvaluator omEvaluatorNew(MlirModule mod) {
   // Just allocate and wrap the Evaluator.
   return wrap(new Evaluator(unwrap(mod)));
 }
+void omEvaluatorDestroy(OMEvaluator evaluator) { delete unwrap(evaluator); }
+
 
 /// Use the Evaluator to Instantiate an Object from its class name and actual
 /// parameters.
@@ -152,6 +155,8 @@ OMEvaluatorValue omEvaluatorInstantiate(OMEvaluator evaluator,
   // Wrap and return the Object.
   return wrap(result.value());
 }
+
+void omEvaluatorValueDestroy(OMEvaluatorValue value) { unwrap(value).reset(); }
 
 /// Get the Module the Evaluator is built from.
 MlirModule omEvaluatorGetModule(OMEvaluator evaluator) {
@@ -222,7 +227,8 @@ OMEvaluatorValue omEvaluatorObjectGetField(OMEvaluatorValue object,
 
 // Get a context from an EvaluatorValue.
 MlirContext omEvaluatorValueGetContext(OMEvaluatorValue evaluatorValue) {
-  return wrap(unwrap(evaluatorValue)->getContext());
+  auto x = unwrap(evaluatorValue)->getContext();
+  return wrap(x);
 }
 
 // Get location from an EvaluatorValue.

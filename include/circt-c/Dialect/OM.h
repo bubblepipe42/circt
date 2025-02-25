@@ -102,6 +102,7 @@ typedef struct OMEvaluatorValue OMEvaluatorValue;
 
 /// Construct an Evaluator with an IR module.
 MLIR_CAPI_EXPORTED OMEvaluator omEvaluatorNew(MlirModule mod);
+MLIR_CAPI_EXPORTED void omEvaluatorDestroy(OMEvaluator evaluator);
 
 /// Use the Evaluator to Instantiate an Object from its class name and actual
 /// parameters.
@@ -109,6 +110,7 @@ MLIR_CAPI_EXPORTED OMEvaluatorValue
 omEvaluatorInstantiate(OMEvaluator evaluator, MlirAttribute className,
                        intptr_t nActualParams, OMEvaluatorValue *actualParams);
 
+MLIR_CAPI_EXPORTED void omEvaluatorValueDestroy(OMEvaluatorValue value);
 /// Get the Module the Evaluator is built from.
 MLIR_CAPI_EXPORTED MlirModule omEvaluatorGetModule(OMEvaluator evaluator);
 
